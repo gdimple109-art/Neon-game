@@ -1,0 +1,124 @@
+\u003C!DOCTYPE html>
+\u003Chtml lang=\"en\">
+\u003Chead>
+    \u003Cmeta charset=\"UTF-8\">
+    \u003Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    \u003Ctitle>Gravity Rush - Neon Edition\u003C/title>
+    \u003Cstyle>
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #0ff; font-size: 20px; text-shadow: 0 0 10px #0ff; pointer-events: none; }
+    \u003C/style>
+\u003C/head>
+\u003Cbody>
+    \u003Cdiv id=\"ui\">Score: \u003Cspan id=\"score\">0\u003C/span>\u003C/div>
+    \u003Ccanvas id=\"gameCanvas\">\u003C/canvas>
+
+    \u003Cscript>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        let gravity = 0.6;
+        let isGameOver = false;
+
+        const player = {
+            x: 50,
+            y: canvas.height / 2,
+            width: 30,
+            height: 30,
+            dy: 0,
+            jumpForce: -10,
+            color: '#0ff'
+        };
+
+        const obstacles = \\[\\];
+
+        function spawnObstacle() {
+            const h = Math.random() \\* (canvas.height / 2) + 50;
+            obstacles.push({
+                x: canvas.width,
+                y: Math.random() > 0.5 ? 0 : canvas.height - h,
+                width: 40,
+                height: h,
+                color: '#f0f'
+            });
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            player.dy += gravity;
+            player.y += player.dy;
+
+            if (player.y + player.height > canvas.height || player.y \u003C 0) {
+                gameOver();
+            }
+
+            obstacles.forEach((obs, index) => {
+                obs.x -= 5;
+                if (obs.x + obs.width \u003C 0) {
+                    obstacles.splice(index, 1);
+                    score++;
+                    scoreElement.innerText = score;
+                }
+
+                if (player.x \u003C obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y \u003C obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    gameOver();
+                }
+            });
+
+            if (frameCount % 100 === 0) spawnObstacle();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Player
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Obstacles
+            obstacles.forEach(obs => {
+                ctx.shadowColor = obs.color;
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            });
+        }
+
+        let frameCount = 0;
+        function loop() {
+            update();
+            draw();
+            frameCount++;
+            requestAnimationFrame(loop);
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            alert(\"Game Over! Score: \" + score);
+            location.reload();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') player.dy = player.jumpForce;
+        });
+
+        canvas.addEventListener('touchstart', () => {
+            player.dy = player.jumpForce;
+        });
+
+        loop();
+    \u003C/script>
+\u003C/body>
+\u003C/html>
+
